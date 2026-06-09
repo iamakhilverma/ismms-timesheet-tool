@@ -1,0 +1,26 @@
+# isolated virtualenv (recreated per-machine by ./setup.sh)
+.venv/
+
+# cached Microsoft login (per-machine, never commit)
+.token_cache.json
+
+# per-machine send-method choice (outlook/graph)
+.backend
+
+# YOUR personal info (name, Life #, email, recipients) -- never commit
+profile.json
+
+# ALL PDFs stay local -- a PDF here is your blank form / generated sheets / samples,
+# all of which contain personal data (name, Life #, signature). Never commit any PDF.
+*.pdf
+
+# generated launcher (recreated by ./setup.sh)
+/timesheet
+
+# generated timesheet PDFs
+output/
+
+# python / macOS cruft
+__pycache__/
+*.pyc
+.DS_Store

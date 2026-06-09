@@ -1,0 +1,34 @@
+{
+  "_comment": "Shared, non-personal defaults (safe to publish). Your personal info -- name, Life #, work email, recipients -- lives in profile.json (git-ignored); run 'timesheet setup' to create it. Your blank Daily Attendance Record PDF goes in template.pdf (git-ignored). Nothing personal is committed.",
+
+  "time_in": "9:00",
+  "time_out": "5:00",
+  "daily_hours": "7.5",
+  "holiday_code": "H",
+
+  "_schedule_comment": "default_send_time = the Friday clock time (local, 24h HH:MM) used by 'schedule'/Graph when you don't pass --at.",
+  "default_send_time": "14:00",
+
+  "email": {
+    "to": [],
+    "cc": [],
+    "subject": "Time & Attendance Sheet submission",
+    "body": "Dear Team,\n\nPlease find attached my Time & Attendance Sheet for the payroll period of {period}.\n\nKind regards,\n{name}",
+    "attachment_name": "Time & Attendance Sheet ({period_file}).pdf"
+  },
+
+  "_holidays_comment": "Auto-applied every run. Add ISO dates or A..B ranges (copy from _holidays_example). Weekends in a range are skipped. Year-agnostic; or put yours in profile.json.",
+  "_holidays_example": ["2026-06-19", "2026-12-24..2026-12-25"],
+  "holidays": [],
+
+  "_pto_comment": "Auto-applied PTO. Each entry: {\"date\": \"YYYY-MM-DD\"} OR {\"from\":\"...\",\"to\":\"...\"}, plus \"code\" (PTOS/PTOU) and \"paid\" (true=7.5h, false=unpaid lowers total). Copy from _pto_example.",
+  "_pto_example": [
+    {"from": "2026-08-03", "to": "2026-08-15", "code": "PTOU", "paid": false},
+    {"date": "2026-07-10", "code": "PTOS", "paid": true}
+  ],
+  "pto": [],
+
+  "_auth_comment": "Microsoft Graph delegated auth (only used by the 'graph' method). Public 'Microsoft Graph Command Line Tools' client; no app registration. tenant: 'organizations' or your tenant GUID/domain.",
+  "azure_client_id": "14d82eec-204b-4c2f-b7e8-296a70dab67e",
+  "tenant": "organizations"
+}

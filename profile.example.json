@@ -1,0 +1,12 @@
+{
+  "_comment": "Copy this to profile.json (git-ignored) or just run 'timesheet setup'. This holds YOUR personal info and is never committed. It overrides values in config.json.",
+  "name": "Your Name",
+  "life_num": "0000000",
+  "user_email": "you@mssm.edu",
+  "email": {
+    "to": ["GGSTimeAttendance@mssm.edu"],
+    "cc": ["your.supervisor@mssm.edu"]
+  },
+  "holidays": [],
+  "pto": []
+}
