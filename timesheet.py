@@ -520,12 +520,7 @@ def cmd_draft(args, cfg):
     week_starts = _weeks_to_schedule(resolve_week(args.week),
                                      getattr(args, "through", None), getattr(args, "weeks", None))
     single = len(week_starts) == 1
-    if not single and ts_outlook.is_new_outlook():
-        raise RuntimeError(
-            f"Bulk-drafting {len(week_starts)} weeks needs Classic Outlook -- New Outlook opens a "
-            "separate compose window per email (unworkable for many). Turn OFF 'New Outlook' (toggle at "
-            "the top-right of Outlook) to use Classic, which saves drafts straight to your Drafts folder "
-            "(they sync to your phone). Then re-run. (Single-week 'draft' still works in New Outlook.)")
+    _require_classic_for_bulk(len(week_starts))
     last_period = None
     for ws in week_starts:
         out, period = build_pdf(cfg, ws, args.holiday, args.pto, announce=single)
@@ -593,6 +588,16 @@ def cmd_setup(args, cfg):
         print("Then test it with:  ./timesheet verify   (sends only to you).")
 
 
+def _require_classic_for_bulk(n):
+    """Only BULK (multi-week) staging needs Classic Outlook; everything else works in New."""
+    if n > 1 and ts_outlook.is_new_outlook():
+        raise RuntimeError(
+            f"Bulk-staging {n} weeks needs Classic ('Legacy') Outlook -- New Outlook opens a separate "
+            "compose window per email. Turn OFF the 'New Outlook' toggle (top-right of Outlook) to use "
+            "Classic, which saves drafts silently to your Drafts folder; then re-run, and switch back to "
+            "New Outlook to Schedule-Send them. (Single-week send/draft/schedule all work in New Outlook.)")
+
+
 def _weeks_to_schedule(start_week, through, weeks):
     if through:
         end_week = week_sunday(dt.date.fromisoformat(through))
@@ -613,6 +618,7 @@ def cmd_schedule(args, cfg):
     week_starts = _weeks_to_schedule(resolve_week(args.week), args.through, args.weeks)
     if backend == "outlook":
         single = len(week_starts) == 1
+        _require_classic_for_bulk(len(week_starts))
         for ws in week_starts:
             out, period = build_pdf(cfg, ws, args.holiday, args.pto, announce=single)
             ts_outlook.deliver(cfg, out, period, mode="draft", show=single)
