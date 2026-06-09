@@ -37,6 +37,7 @@ try:
     import ts_pdf
     import ts_outlook
     import ts_eml
+    import ts_holidays
 except ImportError:
     sys.stderr.write(
         "Missing dependencies. Run the one-time setup first:\n"
@@ -76,10 +77,16 @@ def _deep_merge(base, over):
 
 def load_config():
     with open(CONFIG_PATH) as fh:
-        cfg = json.load(fh)
-    if PROFILE_PATH.exists():               # personal info overrides the shared defaults
-        with open(PROFILE_PATH) as fh:
-            cfg = _deep_merge(cfg, json.load(fh))
+        base = json.load(fh)
+    if not PROFILE_PATH.exists():
+        return base
+    with open(PROFILE_PATH) as fh:          # personal info overrides the shared defaults
+        prof = json.load(fh)
+    cfg = _deep_merge(base, prof)
+    # An empty/absent holidays|pto in the profile must NOT wipe the shared config defaults.
+    for k in ("holidays", "pto"):
+        if not prof.get(k):
+            cfg[k] = base.get(k, [])
     return cfg
 
 
@@ -509,17 +516,49 @@ def cmd_send(args, cfg):
 
 
 def cmd_draft(args, cfg):
-    """Build the PDF and stage the email in Outlook (compose window or saved draft)."""
-    out, period = build_pdf(cfg, resolve_week(args.week), args.holiday, args.pto)
-    _print_email(cfg, period)
-    ts_outlook.deliver(cfg, out, period, mode="draft")
-    if ts_outlook.is_new_outlook():
-        print("\nOpened a fully-filled compose window in Outlook (To/Cc/Subject/body + PDF). Two options:")
-        print("  - Friday-2PM auto-send: click the dropdown arrow next to Send > 'Send Later' /")
-        print("    'Schedule Send', pick Friday 2:00 PM. Exchange sends it then (Mac can be off).")
-        print("  - Or save to Drafts (Cmd+S): it syncs to your phone -- tap Send anytime.")
+    """Stage the email in Outlook for one week, or BULK-draft a range of weeks."""
+    week_starts = _weeks_to_schedule(resolve_week(args.week),
+                                     getattr(args, "through", None), getattr(args, "weeks", None))
+    single = len(week_starts) == 1
+    if not single and ts_outlook.is_new_outlook():
+        raise RuntimeError(
+            f"Bulk-drafting {len(week_starts)} weeks needs Classic Outlook -- New Outlook opens a "
+            "separate compose window per email (unworkable for many). Turn OFF 'New Outlook' (toggle at "
+            "the top-right of Outlook) to use Classic, which saves drafts straight to your Drafts folder "
+            "(they sync to your phone). Then re-run. (Single-week 'draft' still works in New Outlook.)")
+    last_period = None
+    for ws in week_starts:
+        out, period = build_pdf(cfg, ws, args.holiday, args.pto, announce=single)
+        last_period = period
+        ts_outlook.deliver(cfg, out, period, mode="draft", show=single)
+        if not single:
+            print(f"  draft saved: {period}")
+    if single:
+        _print_email(cfg, last_period)
+        if ts_outlook.is_new_outlook():
+            print("\nOpened a filled compose window. Use the Send dropdown > Schedule Send (Fri 2 PM),")
+            print("or save to Drafts (Cmd+S) and tap Send from your phone.")
+        else:
+            print("\nSaved a ready-to-send draft to Outlook Drafts -- syncs to your phone; tap Send Friday.")
     else:
-        print("\nSaved a ready-to-send draft to Outlook Drafts. It syncs to your phone -- tap Send Friday.")
+        print(f"\nSaved {len(week_starts)} drafts to your Outlook Drafts folder (they sync to your phone).")
+        print("Open each and use Schedule Send for its Friday 2 PM, or just send it that Friday.")
+
+
+def cmd_holidays_from_pdf(args, cfg):
+    """Extract holiday dates from a holiday-schedule PDF; optionally save them."""
+    dates = ts_holidays.extract_holidays(args.pdf, which=args.which)
+    print(f"Extracted {len(dates)} '{args.which}' holiday date(s) from {Path(args.pdf).name}:")
+    for d in dates:
+        print(f"  {d}  ({dt.date.fromisoformat(d):%a %m/%d/%Y})")
+    if args.write:
+        target = PROFILE_PATH if args.write == "profile" else CONFIG_PATH
+        data = json.load(open(target)) if target.exists() else {}
+        data["holidays"] = dates
+        target.write_text(json.dumps(data, indent=2) + "\n")
+        print(f"\nSaved these into {target.name} -> holidays. They auto-apply every run.")
+    else:
+        print("\nAdd --write profile (recommended) or --write config to save them.")
 
 
 def cmd_eml(args, cfg):
@@ -794,9 +833,20 @@ def main():
     sp = sub.add_parser("send", help="build + send right now"); with_week_flags(sp)
     sp.set_defaults(func=cmd_send)
 
-    sp = sub.add_parser("draft", help="build + save a ready-to-send draft in Outlook (syncs to phone)")
+    sp = sub.add_parser("draft", help="stage email(s) in Outlook; bulk with --through/--weeks")
     with_week_flags(sp)
+    sp.add_argument("--through", metavar="YYYY-MM-DD",
+                    help="BULK: draft every week from --week through this date (any date in the end week)")
+    sp.add_argument("--weeks", type=int, help="BULK: draft this many consecutive weeks from --week")
     sp.set_defaults(func=cmd_draft)
+
+    sp = sub.add_parser("holidays-from-pdf", help="extract holiday dates from a holiday-schedule PDF")
+    sp.add_argument("pdf", help="path to the holiday-schedule PDF")
+    sp.add_argument("--which", choices=["observed", "actual", "payday"], default="observed",
+                    help="which date column to use (default: observed)")
+    sp.add_argument("--write", choices=["profile", "config"],
+                    help="save the dates into profile.json or config.json holidays")
+    sp.set_defaults(func=cmd_holidays_from_pdf)
 
     sub.add_parser("setup", help="choose this machine's send method (Outlook/Graph)").set_defaults(func=cmd_setup)
 

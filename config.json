@@ -17,9 +17,8 @@
     "attachment_name": "Time & Attendance Sheet ({period_file}).pdf"
   },
 
-  "_holidays_comment": "Auto-applied every run. Add ISO dates or A..B ranges (copy from _holidays_example). Weekends in a range are skipped. Year-agnostic; or put yours in profile.json.",
-  "_holidays_example": ["2026-06-19", "2026-12-24..2026-12-25"],
-  "holidays": [],
+  "_holidays_comment": "Auto-applied every run (observed dates). These are the Mount Sinai 2026 holidays; update yearly, or run 'timesheet holidays-from-pdf <schedule.pdf> --write config' to refresh them from the official PDF. An empty 'holidays' in your profile.json falls back to these.",
+  "holidays": ["2026-01-01", "2026-01-19", "2026-02-16", "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25"],
 
   "_pto_comment": "Auto-applied PTO. Each entry: {\"date\": \"YYYY-MM-DD\"} OR {\"from\":\"...\",\"to\":\"...\"}, plus \"code\" (PTOS/PTOU) and \"paid\" (true=7.5h, false=unpaid lowers total). Copy from _pto_example.",
   "_pto_example": [

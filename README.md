@@ -225,9 +225,26 @@ default (works for any year). `config.json` ships with `_holidays_example` /
 ```
 
 You can put holidays/PTO in `profile.json` instead (also auto-applied) if you'd rather
-keep them with your personal info. `config.json` holds only shared, non-personal defaults
-(subject/body template, work hours/times, holiday code, default send time); your name,
-Life #, email and recipients live in `profile.json`.
+keep them with your personal info. `config.json` holds shared defaults (subject/body
+template, work hours/times, holiday code, default send time, and the org's holiday list);
+your name, Life #, email and recipients live in `profile.json`.
+
+**Auto-import holidays from the official PDF:** instead of typing dates, point the tool at
+your department's holiday-schedule PDF — it reads the *observed* dates:
+
+```bash
+timesheet holidays-from-pdf "Holiday_Schedule_2026-MSH.pdf"                 # preview
+timesheet holidays-from-pdf "Holiday_Schedule_2026-MSH.pdf" --write config   # save
+```
+
+**Bulk-draft a whole stretch** (e.g. the rest of the year) in one command — note this
+needs **Classic Outlook** (New Outlook opens a window per email; Classic saves them
+silently to your Drafts folder, synced to your phone):
+
+```bash
+timesheet draft --week 2026-06-28 --through 2026-12-31   # every week in the range
+timesheet draft --weeks 6                                 # the next 6 weeks
+```
 
 ---
 
@@ -236,7 +253,8 @@ Life #, email and recipients live in `profile.json`.
 | Command | What it does |
 |---|---|
 | `setup` | enter your profile (name/Life#/email/recipients) + choose method (outlook/graph) |
-| `draft` | stage the email in Outlook (compose window / saved draft) |
+| `draft` | stage the email in Outlook (compose window / saved draft); **bulk** a range with `--through`/`--weeks` |
+| `holidays-from-pdf` | extract holiday dates from a holiday-schedule PDF (`--write profile`/`config`) |
 | `schedule` | Graph: server-side Friday 2 PM. Outlook: stage draft(s). Supports `--through` / `--weeks` |
 | `send` | send right now |
 | `eml` | write the email as a `.eml` file and open it |
