@@ -94,14 +94,22 @@ If you skipped it, add it yourself: `alias timesheet="/full/path/to/timesheet"` 
    or set **New messages → (none)**. The tool fills the body; Outlook adds the signature
    afterward, so this is an Outlook setting (not something the tool controls).
 
-**New Outlook vs Classic Outlook** — both work, slightly differently:
-- **New Outlook** (the modern toggle, default): the tool opens a **fully-filled compose
-  window**; you use **Schedule Send** or save it to Drafts. (It can't script-save to
-  Drafts directly, so it opens the window instead.)
-- **Classic Outlook** (turn the "New Outlook" toggle off, top-right of Outlook): the tool
-  saves the draft **straight to your Drafts folder**, which syncs to your phone.
+**New Outlook vs Classic ("Legacy") Outlook** — for everyday use you don't need to change
+anything. The **only** reason to use Classic is **bulk-drafting many weeks at once**.
 
-Either is fine — pick what you prefer.
+| | Send / single-week `draft` | Bulk `draft --through` / `--weeks` |
+|---|---|---|
+| **New Outlook** (default) | ✅ opens a filled compose window → Schedule Send or save to Drafts | ❌ would open one window per email — the tool refuses for >1 week |
+| **Classic / Legacy** | ✅ saves the draft straight to Drafts (syncs to phone) | ✅ saves all drafts silently to your Drafts folder |
+
+**Bottom line:** stay in **New Outlook** for normal weekly use. Switch to **Classic** only
+to **bulk-draft a range** — toggle **"New Outlook" off** (top-right of Outlook; it
+restarts), run the bulk command, then switch back if you like. The bulk drafts sync
+everywhere, so to schedule them for Friday 2 PM, open them in **New Outlook / OWA / your
+phone** (which have *Schedule Send*; Classic's UI doesn't).
+
+> Switching between New and Classic uses the **same account and mailbox** — it's just the
+> UI/automation layer. Your mail, drafts, and settings are unchanged.
 
 ### Graph method (only if your org approves it)
 ```bash
@@ -237,14 +245,19 @@ timesheet holidays-from-pdf "Holiday_Schedule_2026-MSH.pdf"                 # pr
 timesheet holidays-from-pdf "Holiday_Schedule_2026-MSH.pdf" --write config   # save
 ```
 
-**Bulk-draft a whole stretch** (e.g. the rest of the year) in one command — note this
-needs **Classic Outlook** (New Outlook opens a window per email; Classic saves them
-silently to your Drafts folder, synced to your phone):
+**Bulk-draft a whole stretch** (e.g. the rest of the year) in one command. **This is the
+one feature that needs Classic Outlook** — switch the "New Outlook" toggle **off** first
+(New Outlook would open a window per email; Classic saves them silently to Drafts, synced
+to your phone). Switch back to New afterward to Schedule-Send them. See
+[New vs Classic](#2-sign-in--login-cases) above.
 
 ```bash
 timesheet draft --week 2026-06-28 --through 2026-12-31   # every week in the range
 timesheet draft --weeks 6                                 # the next 6 weeks
 ```
+
+The drafts sync to your phone / OWA / New Outlook, where you open each and **Schedule
+Send → that week's Friday 2 PM**.
 
 ---
 
