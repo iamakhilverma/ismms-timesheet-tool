@@ -105,8 +105,10 @@ def _script(cfg, pdf_path: Path, period: str, mode: str, show: bool, new_outlook
         # New Outlook can't script-save to Drafts, but it opens a fully-populated
         # compose window -> use its 'Schedule Send' (server-side) or save to Drafts.
         lines.append("  open m")
-    else:                       # Classic Outlook: save straight to Drafts (syncs)
-        lines.append("  save m")
+    else:
+        # Classic Outlook: `make new outgoing message` already persists it to the
+        # Drafts folder (which syncs). Do NOT call `save` (it errors -1701, wanting a
+        # file path). Optionally open the window so you can review it.
         if show:
             lines.append("  try")
             lines.append("    open m")
